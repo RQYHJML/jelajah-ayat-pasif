@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sonic: Misi Ayat Pasif</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#9be8ff;font-family:Arial,sans-serif;color:#12386e}header{text-align:center;padding:12px;background:linear-gradient(90deg,#0879e8,#24b9ff);color:#fff;border-bottom:4px solid #fff}h1{margin:3px;font-size:clamp(1.35rem,4vw,2.2rem);text-shadow:2px 3px #06418c}header p{margin:4px}.wrap{max-width:1000px;margin:auto;padding:12px}.card{background:#fff8e6;border:4px solid white;border-radius:20px;padding:20px;box-shadow:0 6px 0 #2675a9;margin:12px auto;max-width:800px}.center{text-align:center}.hide{display:none!important}input{padding:13px;border:3px solid #a4d3f5;border-radius:12px;font-size:1rem;width:min(100%,420px);margin:10px}button{border:3px solid white;border-radius:13px;background:#0879e8;color:#fff;padding:11px 17px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px #064a9e}button:active{transform:translateY(2px);box-shadow:0 2px #064a9e}.gold{background:#ffd62e;color:#173568;box-shadow:0 4px #c18a00}.hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:bold;margin-bottom:8px}.pill{background:white;border:2px solid #b3d7ff;border-radius:30px;padding:8px 12px}canvas{display:block;width:100%;height:auto;background:#8de2ff;border:4px solid white;border-radius:16px;box-shadow:0 5px #2675a9;image-rendering:pixelated}.controls{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}.arrows{display:flex;gap:8px}.hint{font-size:.9rem;color:#244d72}.modal{position:fixed;inset:0;background:#062a58b8;display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}.modalbox{background:#fff8e6;border:5px solid white;border-radius:22px;padding:20px;max-width:560px;width:100%;box-shadow:0 8px #0b5799}.pic{font-size:4rem;text-align:center;background:#d9f4ff;border-radius:14px;padding:8px}.options{display:grid;gap:10px;margin-top:14px}.opt{background:#fff;color:#173568;text-align:left;border:3px solid #82c1f1;box-shadow:0 4px #2877b8}.feedback{padding:10px;border-radius:12px;font-weight:bold;margin-top:10px}.ok{background:#d3ffda;color:#155c2c}.no{background:#ffe1df;color:#922}.maptext{font-size:.92rem;font-weight:bold;color:#214c71}@media(max-width:560px){.wrap{padding:7px}.card{padding:12px}.controls{justify-content:center}.hint{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+<header><h1>🦔 MISI SONIC: 10 RUMAH AYAT PASIF 💍</h1><p>Berlari • Kutip cincin • Masuk rumah • Jawab soalan!</p></header>
+<div class="wrap">
+<section id="welcome" class="card center"><div style="font-size:4rem">🦔💨💍</div><h2>Selamat datang ke Taman Sonic!</h2><p>Masukkan nama murid untuk memulakan pengembaraan.</p><form id="form"><input id="student" required maxlength="45" placeholder="Nama murid"><br><button class="gold">MULA PENGEMBARAAN ⚡</button></form><p class="hint">Boleh main menggunakan papan kekunci atau butang kawalan.</p></section>
+<section id="game" class="hide">
+<div class="hud"><span class="pill" id="who">👤 Murid</span><span class="pill" id="house">🏠 Rumah: 0/10</span><span class="pill" id="rings">💍 Cincin: 0</span><span class="pill" id="score">⭐ Markah: 0/10</span></div>
+<canvas id="world" width="960" height="430" aria-label="Dunia permainan Sonic"></canvas>
+<div class="controls"><div class="arrows"><button id="left">⬅️ KIRI</button><button id="right">KANAN ➡️</button></div><button id="jump" class="gold">⬆️ LOMPAT</button><button id="sound">🔊 Bunyi: ON</button></div>
+<div class="maptext" id="status">Gerakkan Sonic ke Rumah 1. Kutip cincin emas di sepanjang jalan!</div>
+<p class="hint">Komputer: tekan ← → atau A/D untuk bergerak, SPACE untuk melompat. Telefon/tablet: tekan dan tahan butang arah.</p>
+</section>
+<section id="result" class="card center hide"><div style="font-size:4rem">🏆🦔✨</div><h2>MISI SELESAI!</h2><h3 id="finalName"></h3><div id="finalScore" style="font-size:3rem;font-weight:bold;color:#0879e8"></div><h3 id="finalRings"></h3><p id="message"></p><button class="gold" id="again">MAIN SEMULA 🔄</button></section>
+</div>
+<div id="quiz" class="modal hide"><div class="modalbox"><h2 id="quizTitle">🏠 Rumah 1</h2><div id="quizPic" class="pic"></div><p id="quizCaption"></p><h3>Pilih ayat pasif yang betul:</h3><div id="options" class="options"></div><div id="fb"></div><div class="center" style="margin-top:14px"><button id="leave" class="gold hide">KELUAR & TERUSKAN ➜</button></div></div></div>
+<script>
+(()=>{
+const qs=[
+{pic:"👧🏻🌷💧",cap:"Seorang budak perempuan menyiram bunga.",opts:["Bunga disiram oleh budak perempuan.","Budak perempuan menyiram bunga."],ans:0},
+{pic:"👦🏻🍎😋",cap:"Ali sedang makan sebiji epal.",opts:["Ali makan epal.","Epal dimakan oleh Ali."],ans:1},
+{pic:"🐱🛏️💤",cap:"Seekor kucing sedang tidur di atas kusyen.",opts:["Kucing tidur di atas kusyen.","Kusyen ditiduri oleh kucing."],ans:1},
+{pic:"👨🏻🚗🧽",cap:"Ayah sedang mencuci kereta.",opts:["Kereta dicuci oleh ayah.","Ayah mencuci kereta."],ans:0},
+{pic:"👧🏻🧹🏠",cap:"Adik sedang menyapu lantai.",opts:["Adik menyapu lantai.","Lantai disapu oleh adik."],ans:1},
+{pic:"👨🏻‍🍳🧁🔥",cap:"Pakcik sedang membakar kek.",opts:["Kek dibakar oleh pakcik.","Pakcik membakar kek."],ans:0},
+{pic:"👩🏻‍🦱👕☀️",cap:"Ibu sedang menjemur baju.",opts:["Baju dijemur oleh ibu.","Ibu menjemur baju."],ans:0},
+{pic:"👦🏻🌱👧🏻",cap:"Dua orang kanak-kanak menanam pokok.",opts:["Mereka menanam pokok.","Pokok ditanam oleh mereka."],ans:1},
+{pic:"📮📦👩🏻",cap:"Posmen memberikan bungkusan kepada seorang wanita.",opts:["Posmen memberikan bungkusan.","Bungkusan diberikan oleh posmen."],ans:1},
+{pic:"🧒🏻🚌🎒",cap:"Murid sedang menaiki bas.",opts:["Bas dinaiki oleh murid.","Murid menaiki bas."],ans:0}
+];
+const $=x=>document.getElementById(x),canvas=$("world"),ctx=canvas.getContext("2d");
+let name="",x=65,y=300,vy=0,ground=true,keys={},rings=0,score=0,houseIdx=0,answered=Array(10).fill(false),tries=0,locked=false,soundOn=true,ringItems=[],lastTime=0,raf=0,worldWidth=2550;
+const houseXs=Array.from({length:10},(_,i)=>220+i*245);
+function ringInit(){ringItems=[];for(let i=0;i<42;i++)ringItems.push({x:140+i*57,y:245-(i%3)*22,got:false})}
+function beep(freq=660,dur=.1){if(!soundOn)return;try{let A=window.AudioContext||window.webkitAudioContext;if(!window.sonicAudio)window.sonicAudio=new A();let c=window.sonicAudio,o=c.createOscillator(),g=c.createGain();o.frequency.value=freq;o.type="square";g.gain.value=.05;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur)}catch(e){}}
+function startChime(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12),i*130))}
+function draw(){
+ const w=canvas.width,h=canvas.height,camera=Math.max(0,Math.min(worldWidth-w,x-260));
+ ctx.clearRect(0,0,w,h);
+ // sky and clouds
+ let sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,"#72d7ff");sky.addColorStop(1,"#dcfaff");ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+ for(let i=0;i<9;i++){let cx=((i*173-camera*.22)%(w+140)+w+140)%(w+140)-30,cy=48+(i%3)*28;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(cx,cy,19,0,Math.PI*2);ctx.arc(cx+22,cy-8,24,0,Math.PI*2);ctx.arc(cx+47,cy,17,0,Math.PI*2);ctx.fill()}
+ // distant hills
+ ctx.fillStyle="#8fdb78";for(let i=0;i<7;i++){let hx=i*190-camera*.4;ctx.beginPath();ctx.arc(hx,320,100,Math.PI,0);ctx.fill()}
+ // ground
+ ctx.fillStyle="#38bd52";ctx.fillRect(0,350,w,80);ctx.fillStyle="#25883e";ctx.fillRect(0,350,w,8);
+ for(let i=0;i<55;i++){let gx=((i*47-camera)%(w+50)+w+50)%(w+50);ctx.fillStyle=i%2?"#2a9d45":"#74df5c";ctx.fillRect(gx,367+(i%4)*10,20,4)}
+ // finish flag
+ ctx.fillStyle="#fff";ctx.fillRect(worldWidth-camera-25,235,5,115);ctx.fillStyle="#ffdf32";ctx.fillRect(worldWidth-camera-20,235,55,28);ctx.fillStyle="#173568";ctx.font="bold 15px Arial";ctx.fillText("TAMAT",worldWidth-camera-18,254);
+ // houses
+ houseXs.forEach((hx,i)=>{let sx=hx-camera;if(sx < -100||sx>w+100)return;
+ ctx.fillStyle="#fff";ctx.fillRect(sx-42,292,84,58);ctx.fillStyle=["#fa6969","#4d9dff","#ffca37","#ed76b7","#9675e8"][i%5];ctx.beginPath();ctx.moveTo(sx-52,294);ctx.lineTo(sx,247);ctx.lineTo(sx+52,294);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=4;ctx.stroke();ctx.fillStyle="#8b5a36";ctx.fillRect(sx-12,316,24,34);ctx.fillStyle="#bceaff";ctx.fillRect(sx-34,303,16,16);ctx.fillRect(sx+18,303,16,16);ctx.fillStyle="#173568";ctx.font="bold 18px Arial";ctx.textAlign="center";ctx.fillText(String(i+1),sx,282);
+ if(answered[i]){ctx.font="24px Arial";ctx.fillText("⭐",sx+31,246)}
+ });
+ // rings
+ ringItems.forEach(r=>{if(r.got)return;let sx=r.x-camera;if(sx<-20||sx>w+20)return;ctx.strokeStyle="#ffbf00";ctx.lineWidth=6;ctx.beginPath();ctx.ellipse(sx,r.y,10,14,0,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="#fff3a3";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(sx-2,r.y-2,5,8,0,0,Math.PI*2);ctx.stroke()});
+ // Glossy, Sonic-inspired cartoon character drawn directly on the game canvas
+ let sx=x-camera, sy=y;
+ ctx.save();ctx.translate(sx,sy);
+ // soft shadow
+ ctx.fillStyle="rgba(18,70,100,.22)";ctx.beginPath();ctx.ellipse(0,51,29,7,0,0,Math.PI*2);ctx.fill();
+ // red shoes with shiny highlights
+ ctx.fillStyle="#d7192d";ctx.beginPath();ctx.ellipse(-13,43,18,10,-.15,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-27,39,23,4);
+ ctx.fillStyle="#d7192d";ctx.beginPath();ctx.ellipse(13,43,17,9,.18,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(3,39,21,4);
+ // legs
+ ctx.fillStyle="#f4c9a3";ctx.fillRect(-14,25,8,15);ctx.fillRect(7,25,8,15);
+ // blue body with gradients
+ let body=ctx.createRadialGradient(-10,-8,3,0,3,31);body.addColorStop(0,"#52d9ff");body.addColorStop(.45,"#087cf0");body.addColorStop(1,"#063bba");
+ ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,5,23,29,-.1,0,Math.PI*2);ctx.fill();
+ // iconic swept-back spikes
+ ctx.fillStyle="#0865dc";ctx.beginPath();ctx.moveTo(-9,-11);ctx.lineTo(-43,-31);ctx.lineTo(-31,-4);ctx.lineTo(-49,3);ctx.lineTo(-25,12);ctx.lineTo(-34,25);ctx.lineTo(-10,22);ctx.closePath();ctx.fill();
+ ctx.fillStyle="#168eff";ctx.beginPath();ctx.moveTo(-16,-18);ctx.lineTo(-31,-42);ctx.lineTo(-7,-31);ctx.lineTo(4,-40);ctx.lineTo(7,-19);ctx.closePath();ctx.fill();
+ // muzzle
+ ctx.fillStyle="#f7d0a0";ctx.beginPath();ctx.ellipse(9,7,17,13,.05,0,Math.PI*2);ctx.fill();
+ // face and eyes
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(7,-10,10,17,-.18,0,Math.PI*2);ctx.ellipse(17,-9,8,14,.12,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#16a56b";ctx.beginPath();ctx.ellipse(10,-6,4,8,0,0,Math.PI*2);ctx.ellipse(18,-6,3,7,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#071c43";ctx.beginPath();ctx.arc(11,-5,2,0,Math.PI*2);ctx.arc(18,-5,2,0,Math.PI*2);ctx.fill();
+ // nose and smile
+ ctx.fillStyle="#092e75";ctx.beginPath();ctx.ellipse(24,2,5,4,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#7a301c";ctx.lineWidth=2;ctx.beginPath();ctx.arc(15,10,8,.2,1.5);ctx.stroke();
+ // gloves
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(-22,13,10,13,-.3,0,Math.PI*2);ctx.ellipse(24,20,9,12,.3,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#d8f3ff";ctx.beginPath();ctx.ellipse(-25,9,4,7,-.3,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+ ctx.textAlign="left";ctx.fillStyle="#153d72";ctx.font="bold 16px Arial";ctx.fillText("Laluan Taman Sonic",15,25);
+ if(houseIdx<10){ctx.fillStyle="#fff";ctx.fillRect(15,38,190,30);ctx.fillStyle="#173568";ctx.font="bold 15px Arial";ctx.fillText("Sasaran: Rumah "+(houseIdx+1),24,58)}
+}
+function updateHud(){$("rings").textContent="💍 Cincin: "+rings;$("score").textContent="⭐ Markah: "+score+"/10";$("house").textContent="🏠 Rumah: "+Math.min(houseIdx+1,10)+"/10"}
+function loop(t){if(!$("game").classList.contains("hide")){let dt=Math.min((t-lastTime)/16.67||1,2);lastTime=t;
+ if(! $("quiz").classList.contains("hide")){}else{
+ let dir=(keys.right?1:0)-(keys.left?1:0);x=Math.max(20,Math.min(worldWidth-20,x+dir*4.2*dt));
+ if((keys.jump)&&ground){vy=-11;ground=false;beep(430,.06)}vy+=.48*dt;y+=vy*dt;if(y>=300){y=300;vy=0;ground=true}
+ ringItems.forEach(r=>{if(!r.got&&Math.abs(x-r.x)<25&&Math.abs(y-r.y)<42){r.got=true;rings++;updateHud();beep(950,.07)}});
+ if(houseIdx<10&&Math.abs(x-houseXs[houseIdx])<42&&!answered[houseIdx])openQuestion(houseIdx);
+ }
+ draw();raf=requestAnimationFrame(loop)}}
+function openQuestion(i){keys={};tries=0;locked=false;const q=qs[i];$("quizTitle").textContent="🏠 Rumah "+(i+1)+" daripada 10";$("quizPic").textContent=q.pic;$("quizCaption").textContent=q.cap;$("fb").innerHTML="";$("leave").classList.add("hide");$("options").innerHTML="";q.opts.forEach((o,j)=>{let b=document.createElement("button");b.className="opt";b.innerHTML=`${String.fromCharCode(65+j)}. ${o}`;b.onclick=()=>pick(i,j,b);$("options").appendChild(b)});$("quiz").classList.remove("hide");beep(700,.1)}
+function pick(i,j,b){if(locked)return;tries++;const q=qs[i];if(j===q.ans){locked=true;answered[i]=true;if(tries===1)score++;rings+=tries===1?2:1;$("fb").innerHTML=`<div class="feedback ok">✅ BETUL! ${tries===1?"+1 markah dan +2 cincin!":"Betul pada percubaan kedua, +1 cincin!"}</div>`;Array.from($("options").children).forEach(x=>x.disabled=true);$("leave").classList.remove("hide");updateHud();beep(880,.15)}else if(tries===1){b.disabled=true;$("fb").innerHTML='<div class="feedback no">❌ Belum tepat! Kamu ada satu peluang terakhir.</div>';beep(220,.15)}else{locked=true;answered[i]=true;$("fb").innerHTML=`<div class="feedback no">❌ Jawapan betul: <b>${q.opts[q.ans]}</b>. Teruskan pengembaraan!</div>`;Array.from($("options").children).forEach(x=>x.disabled=true);$("leave").classList.remove("hide");beep(180,.2)}}
+function finish(){cancelAnimationFrame(raf);$("game").classList.add("hide");$("result").classList.remove("hide");$("finalName").textContent="Nama: "+name;$("finalScore").textContent=score+" / 10";$("finalRings").textContent="💍 Cincin dikumpul: "+rings;$("message").textContent=score>=8?"Hebat! Sonic bangga dengan kamu! 🏆":score>=5?"Bagus! Teruskan berlatih ayat pasif! 🌟":"Jangan putus asa, cuba lagi bersama Sonic! 💙"}
+$("form").addEventListener("submit",e=>{e.preventDefault();name=$("student").value.trim();if(!name)return;$("welcome").classList.add("hide");$("game").classList.remove("hide");$("who").textContent="👤 "+name;x=65;y=300;vy=0;rings=0;score=0;houseIdx=0;answered=Array(10).fill(false);ringInit();updateHud();startChime();lastTime=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)});
+$("leave").onclick=()=>{$("quiz").classList.add("hide");houseIdx++;if(houseIdx>=10){finish();return}x=houseXs[houseIdx]-90;updateHud();$("status").textContent="Bagus! Sonic keluar dari rumah dan berlari ke Rumah "+(houseIdx+1)+". Kutip cincin sepanjang jalan!";beep(740,.1)};
+function bindHold(id,key){const el=$(id);const down=e=>{e.preventDefault();keys[key]=true};const up=e=>{e.preventDefault();keys[key]=false};el.addEventListener("pointerdown",down);["pointerup","pointercancel","pointerleave"].forEach(ev=>el.addEventListener(ev,up))}
+bindHold("left","left");bindHold("right","right");bindHold("jump","jump");
+window.addEventListener("keydown",e=>{if(["ArrowLeft","ArrowRight"," ","ArrowUp"].includes(e.key))e.preventDefault();if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a")keys.left=true;if(e.key==="ArrowRight"||e.key.toLowerCase()==="d")keys.right=true;if(e.key===" "||e.key==="ArrowUp"||e.key.toLowerCase()==="w")keys.jump=true});
+window.addEventListener("keyup",e=>{if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a")keys.left=false;if(e.key==="ArrowRight"||e.key.toLowerCase()==="d")keys.right=false;if(e.key===" "||e.key==="ArrowUp"||e.key.toLowerCase()==="w")keys.jump=false});
+$("sound").onclick=()=>{soundOn=!soundOn;$("sound").textContent=soundOn?"🔊 Bunyi: ON":"🔇 Bunyi: OFF";if(soundOn)beep(660,.1)};
+$("again").onclick=()=>{$("result").classList.add("hide");$("welcome").classList.remove("hide");$("student").value=""};
+})();
+</script>
+</body></html>
